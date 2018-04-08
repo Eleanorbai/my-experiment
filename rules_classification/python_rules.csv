@@ -1,0 +1,594 @@
+,规则,rule,任务,检测规则,重要程度,规则标签,描述,description,Noncompliant Code Example,Compliant Solution,rule status,see
+1,不能使用“<>”来检测不相等,"""<>"" should not be used to test inequality",5min,坏味道, 主要,obsolete淘汰的,表格<>和！=是相同的。 但是在Python 2.7.3中，<>表单被认为是过时的。,The forms <> and != are equivalent. But in Python 2.7.3 the <> form is considered obsolete.,return a <> b # Noncompliant,return a != b,,
+2,“\”只能用作原始字符串外部的转义字符,"""\"" should only be used as an escape character outside of raw strings",2min,Bug, 主要,/,“通常情况下，反斜杠只被看作是转义序列的一部分，因此，在原始字符串或转义序列之外使用反斜线看起来像一个破坏的转义序列。,"Typically, backslashes are seen only as part of escape sequences. Therefore, the use of a backslash outside of a raw string or escape sequence looks suspiciously like a broken escape sequence.
+","s = ""Hello \world.""t = ""Nice to \ meet you""
+
+","s = ""Hello world.""",,
+,,,,,,,识别为可转义的字符是：abfnrtvox \'“,"Characters recognized as escape-able are: abfnrtvox\'""","t = ""Nice to \ meet you""","t = ""Nice to \\ meet you""",,
+,,,,,,,,,"u = ""Let's have \ lunch""","u = r""Let's have \ lunch""  // raw string",,
+3,"“__exit__”应该接受 type, value, 和traceback参数","""__exit__"" should accept type, value, and traceback arguments",5min,Bug,阻断,/,__exit__方法用四个参数调用：self，type，value和traceback。 在方法声明中不包含其中的一个，运行时结果将是TypeError。,"The __exit__ method is invoked with four arguments: self, type, value and traceback. Leave one of these out of the method declaration and the result will be a TypeError at runtime.","class MyClass:
+   def __enter__(self):
+       pass
+   def __exit__(self, exc_type, exc_val):  # Noncompliant
+       pass
+",,,
+4,,"""__init__"" should not return a value",5min,Bug,阻断,/,,"By contract, every Python function returns something, even if it's the None value, which can be returned implicitly by omitting the return statement, or explicitly.
+The __init__ method is required to return None. A TypeError will be raised if the __init__ method either yields or returns any expression other than None. Returning some expression that evaluates to None will not raise an error, but is considered bad practice.","class MyClass(object):
+    def __init__(self):
+        self.message = 'Hello'
+        return self  # Noncompliant","class MyClass(object):
+    def __init__(self):
+        self.message = 'Hello'",,
+,,,,,,,,,,,,
+5,,"""break"" and ""continue"" should not be used outside a loop",10min,Bug,严重,/,,"break and continue are unstructured control flow statements which make code harder to read. Additionally, more recent versions of Python raise a SyntaxError when modules containing break or continue outside of a loop are imported.
+Therefore, these statements should not be used outside of loops.","narg=len(sys.argv)
+if narg == 1:
+        print('@Usage: input_filename nelements nintervals')
+        break
+","if narg == 1:
+        print('@Usage: input_filename nelements nintervals')
+        sys.exit()",,
+,,,,,,,,,,,,
+6,,"""pass"" should not be used needlessly",2min,坏味道,次要,unused,,The use of a pass statement where it's not required by the syntax is pure cruft and should be removed.,"    def __init__(self, log="""", who="""", date=0, files=[]):
+        self.log = log
+        self.files = files
+        self.who = who
+        self.date = date
+        pass    # Noncompliant
+
+    def lookup():
+        pass    # Compliant; method can't be empty","    def __init__(self, log="""", who="""", date=0, files=[]):
+        self.log = log
+        self.files = files
+        self.who = who
+        self.date = date
+
+    def lookup():
+        pass",,
+7,,"""return"" and ""yield"" should not be used in the same function",15min,Bug,阻断,/,,"Functions that use yield are known as ""generators"", and generators cannot return values. Similarly, functions that use return cannot use yield. Doing so will cause a SyntaxError.","def adder(n):
+     num = 0
+     while num < n:
+         yield num
+         num += 1
+     return num  #Noncompliant",,,
+8,,"""yield"" and ""return"" should not be used outside functions",15min,Bug,阻断,/,,"yield and return only make sense in the context of functions. Using them outside a function raises a SyntaxError. To break out of a loop, use break instead.","class MyClass:
+    while True:
+        return False #Noncompliant",,,
+9,,"__exit__ must accept 3 arguments: type, value, traceback",10min,坏味道,次要,/,,"Used when the __exit__ special method, belonging to a context manager, does not accept 3 arguments (type, value, traceback).
+This rule was added in Pylint 1.1.0.
+This rule is deprecated, use 3 instead.",,,DEPRECATED,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+10,,__future__ import is not the first non docstring statement,10min,坏味道,次要,/,,Python 2.5 and greater require __future__ import to be the first non docstring statement in the module.,,,,
+11,,__init__ method from a non direct base class is called,2h,坏味道,次要,/,,Used when an __init__ method is called on a class which is not in the direct ancestors for the analysed class.,,,,
+12,,__init__ method from base class is not called,20min,坏味道,次要,/,,Used when an ancestor class method has an __init__ method which is not called by a derived class.,,,,
+13,,__init__ method is a generator,30min,坏味道,主要,/,,"Used when the special class method __init__ is turned into a generator by a yield in its body.
+The __init__() method is required to return nothing. Python 2.7 and 3.x raise a TypeError when __init__() is called and executes a yield statement. Pylint reports this error without depending on the actual invocation.
+This rule is deprecated, use 4 instead.",,,DEPRECATED,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+14,,__iter__ returns non-iterator,15min,坏味道,次要,/,,"Used when an __iter__ method returns something which is not an iterable (i.e. has no `next` method).
+This rule was added in Pylint 1.1.0.",,,,
+,,,,,,,,,,,,
+15,,A field should not duplicate the name of its containing class,10min,坏味道,主要,brain-overload,,"It's confusing to have a class member with the same name (case differences aside) as its enclosing class. This is particularly so when you consider the common practice of naming a class instance for the class itself.
+Best practice dictates that any field or member with the same name as the enclosing class be renamed to be more descriptive of the particular aspect of the class it represents or holds.","class Foo:
+  foo = ''
+
+  def getFoo(self):
+    ...
+
+foo = Foo()
+foo.getFoo() # what does this return?","class Foo:
+  name = ''
+
+  def getName(self):
+    ...
+
+foo = Foo()
+foo.getName()",,
+16,,Abstract class not referenced,20min,坏味道,次要,/,,Used when an abstract class is not used as ancestor anywhere.,,,,
+17,,Abstract class used too few times,45min,坏味道,次要,/,,Used when an abstract class is used less than X times as ancestor.,,,,
+18,,Abstract method is not overridden,1h,坏味道,次要,/,,Used when an abstract method (i.e. raise NotImplementedError) is not overridden in concrete class.,,,,
+19,,Access of nonexistent member,10min,坏味道,主要,/,,Used when a variable is accessed for an nonexistent member.,,,,
+20,,Access to a protected member of a client class,1h,坏味道,次要,/,,Used when a protected member (i.e. class member with a name beginning with an underscore) is access outside the class or a descendant of the class where it's defined.,,,,
+21,,Access to member before its definition,15min,坏味道,主要,/,,Used when an instance member is accessed before it's actually assigned.,,,,
+22,,Accessing nonexistent member (type information incomplete),10min,坏味道,主要,/,,"Used when a variable is accessed for an nonexistent member, but Pylint was not able to interpret all possible types of this variable.",,,,
+23,,Analysis failed,,坏味道,主要,/,,Used when an error occurred preventing the analysis of a module (unable to find it for instance).,,,,
+24,,Anomalous backslash escape,,坏味道,次要,DEPRECATED,,"Used when a backslash is in a literal string but not as an escape.
+This rule was added in Pylint 0.26.0.
+This rule is deprecated, use S1717 instead.",,,,
+25,,Anomalous Unicode escape in byte string,15min,坏味道,次要,/,,"Used when an escape like u is encountered in a byte string where it has no effect.
+This rule was added in Pylint 0.26.0.",,,,
+,,,,,,,,,,,,
+26,,Arguments number discrepancy,15min,坏味道,次要,/,,Used when a method has a different number of arguments than in the implemented interface or in an overridden method.,,,,
+27,,Assert called on a 2-uple,5min,坏味道,次要,/,,"A call of assert on a tuple will always evaluate to true if the tuple is not empty, and will always evaluate to false if it is. Did you mean 'assert x,y'?",,,,
+28,,Assigning to function call which doesn't return,20min,坏味道,主要,/,,Used when an assignment is done on a function call but the inferred function doesn't return anything.,,,,
+29,,Assigning to function call which only returns None,15min,坏味道,次要,/,,Used when an assignment is done on a function call but the inferred function returns nothing but None.,,,,
+30,,Attempting to unpack a non-sequence,15min,坏味道,次要,/,,"Used when something which is not a sequence is used in an unpack assignment.
+This rule was added in Pylint 1.1.0.",,,,
+,,,,,,,,,,,,
+31,,Attribute defined outside __init__,,坏味道,次要,/,,Used when an instance attribute is defined outside the __init__ method.,,,,
+32,,Avoid catching an exception which doesn't inherit from BaseException,20min,坏味道,次要,/,,Used when a class which doesn't inherit from BaseException is used as an exception in an except clause.,,,,
+33,,Backticks should not be used,5min,Bug,阻断,python3,,"Backticks are a deprecated alias for repr(). Don't use them any more, the syntax was removed in Python 3.0.",return `num`  # Noncompliant,return repr(num),,
+34,,Bad continuation,5min,坏味道,次要,/,,"Used when continued lines are badly indented.
+This rule was added in Pylint 1.2.1.",,,,
+35,,Bad except clauses order,30min,坏味道,主要,/,,"Used when except clauses are not in the correct order (from the more specific to the more generic). If you don't fix the order, some exceptions may not be catched by the most specific handler.",,,,
+36,,Bad first argument given to super,10min,坏味道,主要,/,,Used when another argument than the current class is given as first argument of the super builtin.,,,,
+37,,Bad indentation,,坏味道,次要,/,,Used when an unexpected number of indentation's tabulations or spaces has been found.,,,,
+38,,Bad option value,,坏味道,主要,/,,"Used when a bad value for an inline option is encountered.
+The option exists but its value is not valid. The options can be specified in the Pylint configuration file and can be overridden in the Pylint command line.",,,,
+,,,,,,,,,,,,
+39,,Black listed name,1min,坏味道,次要,/,,"Used when the name is listed in the black list (unauthorized names).
+Pylint can be customized to help enforce coding guidelines that discourage or forbid use of certain names for variables, functions, etc. These names are specified with the bad-names option. This message is raised whenever a name is in the list of names defined with the bad-names option.",,,,
+,,,,,,,,,,,,
+40,,Branches should have sufficient coverage by unit tests,,坏味道,主要,bad-practice,,An issue is created on a file as soon as the branch coverage on this file is less than the required threshold.It gives the number of branches to be covered in order to reach the required threshold.,,,,
+41,,Calling of not callable,3min,坏味道,主要,/,,Used when an object being called has been inferred to a non callable object.,,,,
+42,,Catching too general exception,20min,坏味道,次要,/,,"Used when an except catches a too general exception, possibly burying unrelated errors.
+Catching exceptions should be as precise as possible. The type of exceptions that can be raised should be known in advance. Using a catch-all Exception instance defeats the purpose of knowing the type of error that occur-ed, and prohibits the use of tailored responses.",,,,
+,,,,,,,,,,,,
+43,,Class has no __init__ method,20min,坏味道,次要,/,,"Used when a class has no __init__ method, neither its parent classes.",,,,
+44,,"Class method should have ""cls"" as first argument",10min,坏味道,次要,/,,"Used when a class method has an attribute different than ""cls"" as first argument, to easily differentiate them from regular instance methods.",,,,
+45,,Class names should comply with a naming convention,5min,坏味道,次要,convention,,Sharing some naming conventions is a key point to make it possible for a team to efficiently collaborate. This rule allows to check that all class names match a provided regular expression.,,,,
+46,,Classes should not be too complex,10min,坏味道,严重,/,,"The cyclomatic complexity of a class should not exceed a defined threshold. Complex code can perform poorly and will in any case be difficult to understand and therefore to maintain.
+Deprecated
+This rule is deprecated, and will eventually be removed.",,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+47,,Cognitive Complexity of functions should not be too high,5min,坏味道,严重,brain-overload,,Cognitive Complexity is a measure of how hard the control flow of a function is to understand. Functions with high Cognitive Complexity will be difficult to maintain.,,,,
+48,,"Collapsible ""if"" statements should be merged",5min,坏味道,主要,clumsy,,Merging collapsible if statements increases the code's readability.,"if condition1:
+    if condition2:
+        # ...","if condition1 and condition2:
+    # ...",,
+49,,Comma not followed by a space,1min,坏味道,次要,/,,"Used when a comma ("","") is not followed by a space.",,,,
+50,,Comments should not be located at the end of lines of code,1min,坏味道,次要,convention,,"This rule verifies that single-line comments are not located at the ends of lines of code. The main idea behind this rule is that in order to be really readable, trailing comments would have to be properly written and formatted (correct alignment, no interference with the visual structure of the code, not too long to be visible) but most often, automatic code formatters would not handle this correctly: the code would end up less readable. Comments are far better placed on the previous empty line of code, where they will always be visible and properly formatted.",a = b + c   # This is a trailing comment that can be very very long,"# This very long comment is better placed before the line of code
+a = b + c",,
+,,,,,,,,,,,,
+51,,"Control flow statements ""if"", ""for"", ""while"", ""try"" and ""with"" should not be nested too deeply",10min,坏味道,严重,brain-overload,,"Nested if, for, while, try, and with statements are key ingredients for making what's known as ""Spaghetti code"". Such code is hard to read, refactor and therefore maintain.","The following code snippet illustrates this rule with the default threshold of 3.
+  if condition1:           # Compliant - depth = 1
+    # ...
+    if condition2:         # Compliant - depth = 2
+      # ...
+      for i in range(10):  # Compliant - depth = 3, not exceeding the limit
+        # ...
+        if condition4:     # Non-Compliant - depth = 4
+          if condition5:   # Depth = 5, exceeding the limit, but issues are only reported on depth = 4
+            # ...",,,
+52,,Cyclic import,2h,坏味道,次要,/,,"Used when a cyclic import between two or more modules is detected.
+While cyclic imports terminate and execute without surprises in most cases, the circular dependency often indicates a design issue in the code base.",,,,
+,,,,,,,,,,,,
+53,,Dangerous default value as argument,15min,坏味道,次要,/,,Used when a mutable value as list or dictionary is detected in a default value for an argument.,,,,
+54,,Docstrings should be defined,5min,坏味道,主要,/,,"A string literal that is the first statement in a module, function, class, or method is a docstring. A docstring should document what a caller needs to know about the code. Information about what it does, what it returns, and what it requires are all valid candidates for documentation. Well written docstrings allow callers to use your code without having to first read it and understand its logic.
+By convention, docstrings are enclosed in three sets of double-quotes.","def my_function(a,b):","def my_function(a,b):
+      """"""Do X""""""",,
+,,,,,,,,,,,,
+55,,Duplicate argument name in function definition,5min,坏味道,次要,/,,"Duplicate argument names in function definitions are syntax errors.
+This rule was added in Pylint 0.28.0.",,,,
+56,,Duplicate key in dictionary,10min,坏味道,次要,/,,Used when a dictionary expression binds the same key multiple times.,,,,
+57,,Duplicate keyword argument in function call,3min,坏味道,主要,/,,Used when a function call passes the same keyword argument multiple times.,,,,
+58,,Else clause on loop without a break statement,20min,坏味道,次要,/,,"Loops should only have an else clause if they can exit early with a break statement, otherwise the statements under else should be on the same scope as the loop itself.
+This rule was added in Pylint 0.28.0.",,,,
+59,,Empty docstring,5min,坏味道,次要,/,,,,,DEPRECATED,
+60,,Error while code parsing,,坏味道,主要,/,,Used when an exception occurred while building the ASTNG representation which could be handled by ASTNG.,,,,
+61,,Except doesn't do anything,15min,坏味道,次要,/,,"Used when an except clause does nothing but ""pass"" and there is no ""else"" clause.",,,,
+62,,"Exception doesn't inherit from standard ""Exception"" class",15min,坏味道,次要,/,,"Used when a custom exception class is raised but doesn't inherit from the builtin ""Exception"" class.",,,,
+63,,Exception to catch is the result of a binary operation,15min,坏味道,次要,/,,"Used when the exception to catch is of the form ""except A or B:"". If intending to catch multiple, rewrite as ""except (A, B):""",,,,
+64,,Expected mapping for format string,10min,坏味道,主要,/,,Used when a format string that uses named conversion specifiers is used with an argument that is not a mapping.,,,,
+65,,Explicit return in __init__,5min,坏味道,主要,/,,,,,DEPRECATED,
+66,,Expression is assigned to nothing,15min,坏味道,次要,/,,Used when an expression that is not a function call is assigned to nothing. Probably something else was intended.,,,,
+67,,Failed to resolve interfaces,,坏味道,主要,/,,Used when a Pylint as failed to find interfaces implemented by a class.,,,,
+68,,Failed unit tests should be fixed,10min,Bug,主要,/,,Test failures or errors generally indicate that regressions have been introduced. Those tests should be handled as soon as possible to reduce the cost to fix the corresponding regressions.,,,,
+69,,Field names should comply with a naming convention,2min,坏味道,次要,convention,,Sharing some naming conventions is a key point to make it possible for a team to efficiently collaborate. This rule allows to check that field names match a provided regular expression.,"With the default regular expression ^[_a-z][_a-z0-9]*$:
+class MyClass:
+  myField = 1","class MyClass:
+  my_field = 1",,
+,,,,,,,,,,,,
+70,,Files should contain an empty new line at the end,1min,坏味道,次要,convention,,"Some tools such as Git work better when files end with an empty line. This rule simply generates an issue if it is missing.
+For example, a Git diff looks like this if the empty line is missing at the end of the file:
+<pre>
++class Test:
++ pass
+\ No newline at end of file
+</pre>",,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+71,,Files should not be too complex,30min,坏味道,主要,/,,"Most of the time, a very complex file breaks the Single Responsibility Principle and should be re-factored into several different files.
+Deprecated
+This rule is deprecated, and will eventually be removed.",,,DEPRECATED,
+,,,,,,,,,,,,
+72,,Files should not have too many lines of code,1h,坏味道,主要,brain-overload,,"A source file that grows too much tends to aggregate too many responsibilities and inevitably becomes harder to understand and therefore to maintain. Above a specific threshold, it is strongly advised to refactor it into smaller pieces of code which focus on well defined tasks. Those smaller files will not only be easier to understand but also probably easier to test.",,,,
+73,,Final newline missing,,坏味道,次要,/,,"Used when the last line in a file is missing a newline.
+While Python interpreters typically do not require line end character(s) on the last line, other programs processing Python source files may do, and it is simply good practice to have it.
+Added in Pylint 1.0.0.
+This rule is deprecated, use S113 instead.",,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+74,,Format detection error,,坏味道,主要,/,,Used when an unexpected error occurred in bad format detection. Please report the error if it occurs.,,,,
+75,,Format string dictionary key should be a string,15min,坏味道,次要,/,,Used when a format string that uses named conversion specifiers is used with a dictionary whose keys are not all strings.,,,,
+76,,Format string ends in middle of conversion specifier,3min,坏味道,主要,/,,Used when a format string terminates before the end of a conversion specifier.,,,,
+77,,Function names should comply with a naming convention,10min,坏味道,主要,convention,,Shared coding conventions allow teams to collaborate efficiently. This rule checks that all function names match a provided regular expression.,"With the default provided regular expression: ^[a-z_][a-z0-9_]{2,30}$
+def MyFunction(a,b):
+    ...","def my_function(a,b):
+    ...",,
+,,,,,,,,,,,,
+78,,Functions should not be too complex,10min,坏味道,严重,brain-overload,,The Cyclomatic Complexity of functions should not exceed a defined threshold. Complex code may perform poorly and can be difficult to test thoroughly.,,,,
+79,,Functions should not contain too many return statements,20min,坏味道,主要,brain-overload,,Having too many return statements in a function increases the function's essential complexity because the flow of execution is broken each time a return statement is encountered. This makes it harder to read and understand the logic of the function.,"With the default threshold of 3:
+def fun():          # Noncompliant as there are 4 return statements
+  if condition1:
+    return True
+  elif condition2:
+    return False
+  else:
+    return True
+  return False
+}",,,
+,,,,,,,,,,,,
+80,,"Functions, methods and lambdas should not have too many parameters",20min,坏味道,主要,brain-overload,,A long parameter list can indicate that a new structure should be created to wrap the numerous parameters or that the function is doing too many things.,"With a maximum number of 4 parameters:
+def do_something(param1, param2, param3, param4, param5):
+	...","def do_something(param1, param2, param3, param4):
+	...",,
+,,,,,,,,,,,,
+81,,Global variable undefined at the module level,15min,坏味道,次要,/,,"Used when a variable is defined through the ""global"" statement but the variable is not defined in the module scope.",,,,
+82,,Identical expressions should not be used on both sides of a binary operator,2min,Bug,主要,cert,,"Using the same value on either side of a binary operator is almost always a mistake. In the case of logical operators, it is either a copy/paste error and therefore a bug, or it is simply wasted code, and should be simplified. In the case of bitwise operators and most binary mathematical operators, having the same value on both sides of an operator yields predictable results, and should be simplified.
+This rule ignores *, +, and =.","if a == a: # Noncompliant
+    work()
+
+if  a != a: # Noncompliant
+    work()
+
+if  a == b and a == b: # Noncompliant
+    work()
+
+if a == b or a == b: # Noncompliant
+    work()
+
+j = 5 / 5 # Noncompliant
+k = 5 - 5 # Noncompliant",,,"	•	CERT, MSC12-C. - Detect and remove code that has no effect or is never executed
+	•	CERT, MSC12-CPP. - Detect and remove code that has no effect
+	•	S1656 - Implements a check on =."
+,,,,,,,,,,,,
+83,,Ignored builtin module,,坏味道,主要,/,,Used to indicate that the user asked to analyze a builtin module which has been skipped.,,,,
+84,,Ignoring entire file,,坏味道,提示,/,,Used to inform that the file will not be checked.,,,,
+85,,Implemented interface must be a class,20min,坏味道,主要,/,,Used when a class claims to implement an interface which is not a class.,,,,
+86,,Implicit unpacking of exceptions is not supported in Python 3,15min,坏味道,次要,/,,"Python3 will not allow implicit unpacking of exceptions in except clauses. See http://www.python.org/dev/peps/pep-3110/ This message can't be emitted when using Python >= 3.0.
+This rule was added in Pylint 1.0.0.",,,,
+87,,Increment and decrement operators should not be used,5min,Bug,主要,/,,"Python has no pre/post increment/decrement operator. For instance, x++ and x-- will fail to parse. More importantly, ++x and --x will do nothing. To increment a number, simply write x += 1.",++x # Noncompliant,x += 1,,
+88,,Interface not implemented,20min,坏味道,次要,/,,Used when an interface class is not implemented anywhere.,,,,
+89,,Internal Pylint error,,坏味道,主要,/,,Used when an unexpected error occurred while building the ASTNG representation. This is usually accompanied by a traceback. Please report such errors!,,,,
+90,,Invalid __slots__ object,20min,坏味道,次要,/,,"Used when an invalid __slots__ is found in class. Only a string, an iterable or a sequence is permitted.
+This rule was added in Pylint 1.2.0.",,,,
+91,,Invalid mode for open,15min,坏味道,次要,/,,"Python supports: r, w, a modes with b, +, and U options. See http://docs.python.org/2/library/functions.html#open
+This rule was added in Pylint 1.0.0.",,,,
+92,,Invalid name,1min,坏味道,次要,/,,"Used when the name doesn't match the regular expression associated to its type (constant, variable, class...).
+This rule is deprecated, use 69, 102, 45, 113, 77, 126 instead.",,,DEPRECATED,
+93,,"Invalid object in __all__, must contain only strings",3min,坏味道,次要,/,,"Used when an invalid (non-string) object occurs in __all__.
+This rule was added in Pylint 0.27.0.",,,,
+94,,"Invalid object in __slots__, must contain only non empty strings",10min,坏味道,次要,/,,"Used when an invalid (non-string) object occurs in __slots__.
+This rule was added in Pylint 1.2.0.",,,,
+95,,IP addresses should not be hardcoded,30min,漏洞,次要,cert,,"Hardcoding an IP address into source code is a bad idea for several reasons:
+	•	a recompile is required if the address changes
+	•	it forces the same address to be used in every environment (dev, sys, qa, prod)
+	•	it places the responsibility of setting the value to use in production on the shoulders of the developer
+	•	it allows attackers to decompile the code and thereby discover a potentially sensitive address","ip = '127.0.0.1'
+sock = socket.socket()
+sock.bind((ip, 9090))","ip = config.get(section, ipAddress)
+sock = socket.socket()
+sock.bind((ip, 9090))",,"CERT, MSC03-J. - Never hard code sensitive information"
+96,,Jump statements should not be followed by other statements,5min,Bug,主要,"cert, cwe, misra, unused",,"Jump statements (return, break, continue, and raise) move control flow out of the current code block. Typically, any statements in a block that come after a jump are simply wasted keystrokes lying in wait to confuse the unwary.","def fun(a):
+  i = 10
+  return i + a       # Noncompliant
+  i += 1             # this is never executed","def fun(a):
+  i = 10
+  return i + a",,
+97,,Lambda may not be necessary,5min,坏味道,次要,/,,Used when the body of a lambda expression is a function call on the same argument list as the lambda itself; such lambda expressions are in all but a few cases replaceable with the function being called in the body of the lambda.,,,,
+98,,Line too long,1min,坏味道,次要,/,,"Used when a line is longer than a given number of characters.
+This rule is deprecated, use 100 instead.",,,DEPRECATED,
+99,,Lines should have sufficient coverage by unit tests,2min,坏味道,主要,bad-practice,,An issue is created on a file as soon as the line coverage on this file is less than the required threshold. It gives the number of lines to be covered in order to reach the required threshold.,,,,
+100,,Lines should not be too long,1min,坏味道,主要,convention,,Having to scroll horizontally makes it harder to get a quick overview and understanding of any piece of code.,,,,
+101,,Lines should not end with trailing whitespaces,1min,坏味道,次要,convention,,"Trailing whitespaces are simply useless and should not stay in code. They may generate noise when comparing different versions of the same file.
+If you encounter issues from this rule, this probably means that you are not using an automated code formatter - which you should if you have the opportunity to do so.",,,,
+102,,Local variable and function parameter names should comply with a naming convention,2min,坏味道,次要,convention,,Sharing some naming conventions is a key point to make it possible for a team to efficiently collaborate. This rule allows to check that all local variable and function parameter names match a provided regular expression.,"Loop counters are ignored by this rule.
+for i in range(limit):  # Compliant
+    print(i)",,,
+,,,,,,,,,,,,
+103,,Locally disabling message,,坏味道,提示,/,,Used when an inline option disables a message or a messages category.,,,,
+104,,Locally enabling message,,坏味道,提示,/,,Used when an inline option enables a message or a messages category.,,,,
+105,,Logging format string ends in middle of conversion specifier,10min,坏味道,主要,/,,Used when a logging statement format string terminates before the end of a conversion specifier.,,,,
+106,,"Long suffix ""L"" should be upper case",2min,坏味道,次要,/,,"The long suffix should always be written in uppercase, i.e. 'L', as the lowercase 'l' can easily be confused with the digit one '1'.",return 10l  // Noncompliant; easily confused with one zero one,return 10L,,
+107,,map/filter on lambda could be replaced by comprehension,15min,坏味道,次要,/,,"Used when a lambda is the first argument to ""map"" or ""filter"". It could be clearer as a list comprehension or generator expression. This message can't be emitted when using Python >= 3.0.
+This rule was added in Pylint 0.27.0.",,,,
+108,,Metaclass class method first argument,20min,坏味道,次要,/,,"Used when a metaclass class method has a first argument named differently than the value specified in valid-metaclass-classmethod-first-arg option (defaults to ""mcs""), recommended to easily differentiate them from regular instance methods.",,,,
+109,,"Metaclass method should have ""mcs"" as first argument",10min,坏味道,次要,/,,"Used when a metaclass method has an attribute different the ""mcs"" as first argument.",,,,
+110,,Method could be a function,20min,坏味道,次要,/,,"Used when a method doesn't use its bound instance, and so could be written as a function.
+If the class method does not reference any of the class attributes it may be more clear to define the method as a static function instead.
+This rule is deprecated, use 116 instead.",,,DEPRECATED,
+111,,Method has no argument,10min,坏味道,主要,/,,Used when a method which should have the bound instance as first argument has no argument defined.,,,,
+112,,Method hidden by attribute of super class,15min,坏味道,主要,/,,Used when a class defines a method which is hidden by an instance attribute from an ancestor class.,,,,
+113,,Method names should comply with a naming convention,5min,坏味道,次要,convention,,Sharing some naming conventions is a key point to make it possible for a team to efficiently collaborate. This rule allows to check that all method names match a provided regular expression.,"With default provided regular expression: ^[a-z_][a-z0-9_]{2,30}$
+class MyClass:
+    def MyMethod(a,b):
+        ...","class MyClass:
+    def my_method(a,b):
+        ...
+
+",,
+,,,,,,,,,,,,
+114,,"Method should have ""self"" as first argument",5min,坏味道,主要,/,,"Used when a method has an attribute different the ""self"" as first argument. This is considered as an error since this is a so common convention that you shouldn't break it!",,,,
+115,,Methods and field names should not differ only by capitalization,10min,坏味道,阻断,confusing,,"Looking at the set of methods and fields in a class and finding two that differ only by capitalization is confusing to users of the class.
+This situation may simply indicate poor naming. Method names should be action-oriented, and thus contain a verb, which is unlikely in the case where both a method and a field have the same name (with or without capitalization differences). However, renaming a public method could be disruptive to callers. Therefore renaming the member is the recommended action.","class SomeClass:
+    lookUp = false
+    def lookup():       # Non-compliant; method name differs from field name only by capitalization
+        pass","class SomeClass:
+    lookUp = false
+    def getLookUp():
+        pass",,
+,,,,,,,,,,,,
+116,,Methods and properties that don't access instance data should be static,5min,坏味道,次要,pitfall,,"Class methods that don't access instance data can and should be static because they yield more performant code.
+To implement a static method in Python one should use either @classmethod or @staticmethod. A class method receives the class as implicit first argument, just like an instance method receives the instance. A static method does not receive an implicit first argument.","class Utilities:
+    def do_the_thing(self, arg1, arg2, ...):  # Noncompliant
+        #...","class Utilities:
+    @classmethod
+    def do_the_thing(cls, arg1, arg2, ...):
+        #...
+
+或者
+class Utilities:
+    @staticmethod
+    def do_the_thing(arg1, arg2, ...):
+        #...",,
+,,,,,,,,,,,,
+117,,Missing argument to reversed(),10min,坏味道,次要,/,,Used when reversed() builtin didn't receive an argument.,,,,
+118,,Missing argument to super(),10min,坏味道,次要,/,,Used when the super builtin didn't receive an argument. This message can't be emitted when using Python >= 3.0.,,,,
+119,,Missing docstring,5min,坏味道,次要,/,,"Used when a module, function, class or method has no docstring. Some special methods like __init__ doesn't necessary require a docstring.
+This rule is deprecated, use 54 instead.",,,DEPRECATED,
+120,,Missing key in format string dictionary,10min,坏味道,主要,/,,Used when a format string that uses named conversion specifiers is used with a dictionary that doesn't contain all the keys required by the format string.,,,,
+121,,Missing method from interface,30min,坏味道,主要,/,,Used when a method declared in an interface is missing from a class implementing this interface.,,,,
+122,,Missing required attribute,20min,坏味道,次要,/,,Used when an attribute required for modules is missing.,,,,
+123,,Mixed tabs/spaces indentation,1min,坏味道,主要,/,,"Used when there are some mixed tabs and spaces in a module.
+As indentation is part of Python's syntax, inconsistencies in its usage are usually considered a major issue.",,,,
+124,,Mixing named and unnamed conversion specifiers in format string,5min,坏味道,主要,/,,Used when a format string contains both named (e.g. '%(foo)d') and unnamed (e.g. '%d') conversion specifiers. This is also used when a named conversion specifier contains * for the minimum field width and/or precision.,,,,
+125,,Module imports itself,15min,坏味道,次要,/,,Used when a module is importing itself.,,,,
+126,,Module names should comply with a naming convention,10min,坏味道,次要,"cert, convention",,"Shared coding conventions allow teams to collaborate effectively. For that reason, module names should conform to a defined standard.",,,,"	•	CERT, MSC09-CPP. - Character encoding: Use subset of ASCII for safety
+	•	CERT, MSC09-C. - Character encoding: Use subset of ASCII for safety"
+127,,More than one statement on a single line,,坏味道,次要,/,,"Used when more than one statement are found on the same line.
+This rule is deprecated, use 166 instead.",,,DEPRECATED,
+128,,Multiple values passed for parameter in function call,5min,坏味道,主要,/,,"Used when a function call would result in assigning multiple values to a function parameter, one value from a positional argument and one from a keyword argument.",,,,
+129,,Nested blocks of code should not be left empty,5min,坏味道,主要,suspicious,,Most of the time a block of code is empty when a piece of code is really missing. So such empty block must be either filled or removed.,"for i in range(3):
+    pass",,,
+130,,New-style classes should be used,2min,坏味道,次要,python3,,"The new style of class creation, with the declaration of a parent class, created a unified object model in Python, so that the type of an instantiated class is equal to its class. In Python 2.2-2.7, this is not the case for old-style classes. In Python 3+ all classes are new-style classes. However, since the behavior can differ from 2.2+ to 3+, explicitly inheriting from object (if there is no better candidate) is recommended.","class MyClass():
+    pass","class MyClass(object):
+    pass",,
+131,,No exception type(s) specified,15min,坏味道,次要,/,,"Used when an except clause doesn't specify exceptions type to catch.
+Catching exceptions should be as precise as possible. The type of exceptions that can be raised should be known in advance. Using catch-all-constructs hides potential errors (including syntax ones), defeats the purpose of knowing the type of error that occurred, and prohibits the use of tailored responses.",,,,
+132,,Non-ASCII characters found but no encoding specified (PEP 263),5min,坏味道,主要,/,,"Used when some non-ASCII characters are detected but no encoding is specified, as stated in the PEP 263.",,,,
+133,,Not enough arguments for format string,5min,坏味道,主要,/,,Used when a format string that uses unnamed conversion specifiers is given too many arguments.,,,,
+134,,Not enough arguments for logging format string,10min,坏味道,主要,/,,Used when a logging format string is given too many arguments.,,,,
+135,,NotImplemented raised - should raise NotImplementedError,5min,坏味道,主要,/,,Used when NotImplemented is raised instead of NotImplementedError.,,,,
+136,,Old-style class defined,20min,坏味道,次要,/,,"Used when a class is defined that does not inherit from another class and does not inherit explicitly from “object”. This message can’t be emitted when using Python >= 3.0.
+This rule is deprecated, use 130 instead.","class MyClass():
+    pass","class MyClass(object):
+    pass",,
+137,,Operator not followed by a space,1min,坏味道,次要,/,,Used when one of the following operator (!= | <= | == | >= | < | > | = | \+= |-= | \*= | /= | %) is not followed by a space.,,,,
+138,,Operator not preceded by a space,1min,坏味道,次要,/,,Used when one of the following operator (!= | <= | == | >= | < | > | = | \+= |-= | \*= | /= | %) is not preceded by a space.,,,,
+139,,Parentheses should not be used after certain keywords,1min,坏味道,次要,/,,"Parentheses are not required after the assert, del, elif, except, for, if, in, not, raise, return, while, and yield keywords, and using them unnecessarily impairs readability. They should therefore be omitted.","x = 1
+while (x < 10):
+    print ""x is now %d"" % (x)
+    x += 1","x = 1
+while x < 10:
+    print ""x is now %d"" % (x)
+    x += 1",,
+140,,Passing unexpected keyword argument in function call,3min,坏味道,主要,/,,Used when a function call passes a keyword argument that doesn't correspond to one of the function's parameter names.,,,,
+141,,Possible unbalanced tuple unpacking,15min,坏味道,次要,/,,"Used when there is an unbalanced tuple unpacking in assignment.
+This rule was added in Pylint 1.1.0.",,,,
+142,,Python parser failure,30min,坏味道,主要,suspicious,,"When the Python parser fails, it is possible to record the failure as a violation on the file. This way, not only it is possible to track the number of files that do not parse but also to easily find out why they do not parse.",,,,
+143,,Raising a new style class which doesn't inherit from BaseException,15min,坏味道,主要,/,,Used when a new style class which doesn't inherit from BaseException is raised.,,,,
+144,,Raising a string exception,15min,坏味道,次要,/,,Used when a string exception is raised.,,,,
+145,,"Raising only allowed for classes, instances or strings",20min,坏味道,主要,/,,"Used when something which is neither a class, an instance or a string is raised (i.e. a 'TypeError' will be raised).",,,,
+146,,Redefined function/class/method,15min,坏味道,主要,/,,Used when a function / class / method is redefined.,,,,
+147,,Redefining built-in,5min,坏味道,次要,/,,Used when a variable or function override a built-in.,,,,
+148,,Redefining name from outer scope,15min,坏味道,次要,/,,Used when a variable's name hides a name defined in the outer scope.,,,,
+149,,Redefining name in exception handler,20min,坏味道,次要,/,,Used when an exception handler assigns the exception to an existing name.,,,,
+150,,Redundant pairs of parentheses should be removed,1min,坏味道,主要,confusing,,"The use of parentheses, even those not required to enforce a desired order of operations, can clarify the intent behind a piece of code. But redundant pairs of parentheses could be misleading, and should be removed.","return ((3))        # Noncompliant
+return ((x + 1))    # Noncompliant
+x = ((y / 2)) + 1   # Noncompliant","return 3
+return (3)
+return x + 1
+return (x + 1)
+x = y / 2 + 1
+x = (y / 2) + 1",,
+151,,Reimport,,坏味道,次要,/,,Used when a module is reimported multiple times.,,,,
+152,,"Related ""if/else if"" statements should not have the same condition",10min,Bug,主要,"cert, pitfall, unused",,"A chain of if/else if statements is evaluated from top to bottom. At most, only one branch will be executed: the first one with a condition that evaluates to true.
+Therefore, duplicating a condition automatically leads to dead code. Usually, this is due to a copy/paste error. At best, it's simply dead code and at worst, it's a bug that is likely to induce further bugs as the code is maintained, and obviously it could lead to unexpected behavior.","if param == 1:
+  openWindow()
+elif param == 2:
+  closeWindow()
+elif param == 1:            # Noncompliant
+  moveWindowToTheBackground()","if param == 1:
+  openWindow()
+elif param == 2:
+  closeWindow()
+elif param == 3:
+  moveWindowToTheBackground()",,"	•	CERT, MSC12-C. - Detect and remove code that has no effect or is never executed
+	•	CERT, MSC12-CPP. - Detect and remove code that has no effect"
+,,,,,,,,,,,,
+153,,Relative import,15min,坏味道,次要,/,,Used when an import relative to the package directory is detected.,,,,
+154,,Return outside function,5min,坏味道,主要,/,,"Used when a ""return"" statement is found outside a function or method.
+This rule is deprecated, use 8 instead.",,,DEPRECATED,
+155,,Return with argument inside generator,15min,坏味道,主要,/,,"Used when a ""return"" statement with an argument is found outside in a generator function or method (e.g. with some ""yield"" statements).
+This rule is deprecated, use 7 instead.",,,DEPRECATED,
+156,,"Sections of code should not be ""commented out""",5min,坏味道,主要,"misra, unused",,"Programmers should not comment out code as it bloats programs and reduces readability.
+Unused code should be deleted and can be retrieved from source control history if required.",,,,"	•	MISRA C:2004, 2.4 - Sections of code should not be ""commented out"".
+	•	MISRA C++:2008, 2-7-2 - Sections of code shall not be ""commented out"" using C-style comments.
+	•	MISRA C++:2008, 2-7-3 - Sections of code should not be ""commented out"" using C++ comments.
+	•	MISRA C:2012, Dir. 4.4 - Sections of code should not be ""commented out"""
+157,,Signature discrepancy,20min,坏味道,次要,/,,Used when a method signature is different than in the implemented interface or in an overridden method.,,,,
+158,,Similar lines,,坏味道,次要,/,,"Indicates that a set of similar lines has been detected among multiple file. This usually means that the code should be refactored to avoid this duplication.
+This rule is deprecated, use 161 instead.",,,DEPRECATED,
+159,,Skipped unit tests should be either removed or fixed,10min,坏味道,主要,pitfall,,Skipped unit tests are considered as dead code. Either they should be activated again (and updated) or they should be removed.,,,,
+160,,Source files should have a sufficient density of comment lines,2min,坏味道,主要,convention,,An issue is created on a file as soon as the density of comment lines on this file is less than the required threshold. The number of comment lines to be written in order to reach the required threshold is provided by each issue message.,,,,
+161,,Source files should not have any duplicated blocks,10min,坏味道,主要,pitfall,,An issue is created on a file as soon as there is at least one block of duplicated code on this file,,,,
+162,,Source line cannot be decoded using the specified source file encoding,15min,坏味道,次要,/,,"Used when a source line cannot be decoded using the specified source file encoding. This message can't be emitted when using Python >= 3.0.
+This rule was added in Pylint 1.0.0.
+
+
+
+
+",,,,
+163,,Specify string format arguments as logging function parameters,5min,坏味道,次要,/,,"Used when a logging statement has a call form of ""logging.(format_string % (format_args...))"". Such calls should leave string interpolation to the logging method itself and be written ""logging.(format_string, format_args...)"" so that the program may avoid incurring the cost of the interpolation in those cases in which no message will be logged. For more, see http://www.python.org/dev/peps/pep-0282/.",,,,
+164,,Statement in finally block may swallow exception,20min,坏味道,次要,/,,Used when a break or a return statement is found inside the finally clause of a try...finally block: the exceptions raised in the try clause will be silently swallowed instead of being re-raised.,,,,
+165,,Statement seems to have no effect,15min,坏味道,次要,/,,Used when a statement doesn't have (or at least seems to) any effect.,,,,
+166,,Statements should be on separate lines,1min,坏味道,主要,style,,"For better readability, do not put more than one statement on a single line.","if (True): print(""hello"")","if (True):
+    print(""hello"")",,
+167,,"Static method with ""self"" or ""cls"" as first argument",10min,坏味道,次要,/,,"Used when a static method has ""self"" or ""cls"" as first argument.",,,,
+168,,String statement has no effect,15min,坏味道,次要,/,,"Used when a string is used as a statement (which of course has no effect). This is a particular case of W0104 with its own message so you can easily disable it if you're using those strings as documentation, instead of comments.",,,,
+169,,Suspicious argument in lstrip/rstrip,10min,坏味道,次要,/,,"The argument to a str.{l,r}strip call contains a duplicate character.
+This rule was added in Pylint 0.28.0.",,,,
+170,,Syntax error,5min,坏味道,主要,/,,Used when a syntax error is raised for a module.,,,,
+171,,Task marker found,1h,坏味道,次要,/,,Used when a warning note as FIXME or XXX is detected.,,,,
+172,,"The ""exec"" statement should not be used",10min,Bug,阻断,"obsolete, python3",,"Use of the exec statement could be dangerous, and should be avoided. Moreover, the exec statement was removed in Python 3.0. Instead, the built-in exec() function can be used.",exec 'print 1' # Noncompliant,exec('print 1'),,
+173,,"The ""print"" statement should not be used",5min,Bug,阻断,"obsolete, python3",,The print statement was removed in Python 3.0. The built-in function should be used instead.,print '1'  # Noncompliant,print('1'),,
+174,,The first reversed() argument is not a sequence,10min,坏味道,次要,/,,"Used when the first argument to reversed() builtin isn't a sequence (does not implement __reversed__, nor __getitem__ and __len__
+This rule was added in Pylint 1.2.0.",,,,
+175,,Too few arguments,5min,坏味道,主要,/,,Used when a function call passes too few arguments.,,,,
+176,,Too few public methods,1h,坏味道,次要,/,,"Used when class has too few public methods, so be sure it's really worth it.",,,,
+177,,Too many ancestors,3h,坏味道,次要,/,,"Used when class has too many parent classes, try to reduce this to get a more simple (and so easier to use) class.",,,,
+178,,Too many arguments,30min,坏味道,次要,/,,"Used when a function or method takes too many arguments.
+This rule is deprecated, use 80 instead.",,,DEPRECATED,
+179,,Too many arguments for format string,5min,坏味道,主要,/,,Used when a format string that uses unnamed conversion specifiers is given too few arguments.,,,,
+180,,Too many arguments for logging format string,10min,坏味道,主要,/,,Used when a logging format string is given too few arguments.,,,,
+181,,Too many branches,,坏味道,次要,/,,"Used when a function or method has too many branches, making it hard to follow.
+This rule is deprecated, use 78 instead.",,,DEPRECATED,
+182,,Too many instance attributes,2h,坏味道,次要,/,,"Used when class has too many instance attributes, try to reduce this to get a more simple (and so easier to use) class.",,,,
+183,,Too many lines in module,30min,坏味道,次要,/,,"Used when a module has too much lines, reducing its readability.
+This rule is deprecated, use 72 instead.",,,DEPRECATED,
+184,,Too many local variables,20min,坏味道,次要,/,,Used when a function or method has too many local variables.,,,,
+185,,Too many positional arguments for function call,5min,坏味道,主要,/,,Used when a function call passes too many positional arguments.,,,,
+186,,Too many public methods,2h,坏味道,次要,/,,"Used when class has too many public methods, try to reduce this to get a more simple (and so easier to use) class.",,,,
+187,,Too many return statements,20min,坏味道,次要,/,,"Used when a function or method has too many return statement, making it hard to follow.
+This rule is deprecated, use 79 instead.",,,,
+188,,Too many statements,,坏味道,次要,/,,Used when a function or method has too many statements. You should then split it in smaller functions / methods.,,,,
+189,,"Track ""TODO"" and ""FIXME"" comments that do not contain a reference to a person",,坏味道,次要,convention,,"TODO and FIXME comments are typically intended to be short-lived; they are placeholders and reminders that programmers leave for themselves. Unfortunately, even with the best of intentions, those comments are not always acted on and removed in a timely manner. Thus, they can become mysterious, lingering cruft in a code base, reducing both readability and understand-ability.
+This rule flags all FIXME and TODO comments that do not have an attribution matching the specified regular expression immediately after the FIXME or TODO. Ideally, such comments will also contain information about what needs to be fixed or done, but this rule does not enforce that.",# TODO,"# TODO(ganncamp) per the business partners, more checks needed",,
+190,,Track breaches of an XPath rule,,坏味道,主要,/,,"This rule allows the definition of custom rules using XPath expressions.
+Issues are created depending on the return value of the XPath expression. If the XPath expression returns:
+	•	a single or list of AST nodes, then a line issue with the given message is created for each node
+	•	a boolean, then a file issue with the given message is created only if the boolean is true
+	•	anything else, no issue is created
+This rule allows the definition of custom rules using XPath expressions.
+Issues are created depending on the return value of the XPath expression. If the XPath expression returns:
+	•	a single or list of AST nodes, then a line issue with the given message is created for each node
+	•	a boolean, then a file issue with the given message is created only if the boolean is true
+	•	anything else, no issue is created
+Here is an example of an XPath expression to log a violation on each statement:
+//statement",,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+191,,Track comments matching a regular expression,,坏味道,主要,/,,"This rule template can be used to create rules which will be triggered when a comment matches a given regular expression.
+For example, one can create a rule with the regular expression .*REVIEW.* to match all comment containing ""REVIEW"".
+Note that, in order to match REVIEW regardless of the case, the (?i) modifier should be prepended to the expression, as in (?i).*REVIEW.*.",,,,
+192,,"Track uses of ""FIXME"" tags",,坏味道,主要,cwe,,"FIXME tags are commonly used to mark places where a bug is suspected, but which the developer wants to deal with later.
+Sometimes the developer will not have the time or will simply forget to get back to that tag.
+This rule is meant to track those tags and to ensure that they do not go unnoticed.","def divide(numerator, denominator):
+  return numerator / denominator              # FIXME denominator value might be 0",,,"MITRE, CWE-546 - Suspicious Comment"
+193,,Trailing whitespace,1h,坏味道,次要,/,,"Used when there is whitespace between the end of a line and the newline.
+Added in Pylint 1.0.0.
+This rule is deprecated, use 101 instead.",,,DEPRECATED,
+194,,Two branches in a conditional structure should not have exactly the same implementation,10min,坏味道,主要,"design, suspicious",,"Having two branches in the same if structure with the same implementation is at best duplicate code, and at worst a coding error. If the same logic is truly needed for both instances, then they should be combined.","if 0 <= a < 10:
+    do_the_thing()
+elif 10 <= a < 20:
+    do_the_other_thing()
+elif 20 <= a < 50:
+    do_the_thing()  # Noncompliant; duplicates first condition
+else:
+    do_the_rest()
+
+b = 4 if a > 12 else 4","if (0 <= a < 10) or (20 <= a < 50):
+    do_the_thing()
+elif 10 <= a < 20:
+    do_the_other_thing()
+else:
+    do_the_rest()
+
+b = 4
+或者
+
+if 0 <= a < 10:
+    do_the_thing()
+elif 10 <= a < 20:
+    do_the_other_thing()
+elif 20 <= a < 50:
+    do_the_third_thing()
+else:
+    do_the_rest()
+
+b = 8 if a > 12 else 4",,
+,,,,,,,,,,,,
+195,,Unable to check methods signature,,坏味道,主要,/,,Used when Pylint has been unable to check methods signature compatibility for an unexpected reason. Please report this kind if you don't make sense of it.,,,,
+196,,Unable to consider inline option,,坏味道,提示,/,,Used when an inline option is either badly formatted or can't be used inside modules.,,,,
+197,,Unable to import module,,坏味道,主要,/,,Used when Pylint has been unable to import a module.,,,,
+198,,Unable to run raw checkers on built-in module,,坏味道,提示,/,,Used to inform that a built-in module has not been checked using the raw checkers.,,,,
+199,,Unassigned global variable,15min,坏味道,次要,/,,"Used when a variable is defined through the ""global"" statement but no assignment to this variable is done.",,,,
+200,,Undefined name,10min,坏味道,主要,/,,Used when a name cannot be found in a module.,,,,
+201,,Undefined variable,10min,坏味道,主要,/,,Used when an undefined variable is accessed.,,,,
+202,,Undefined variable name in __all__,3min,坏味道,次要,/,,Used when an undefined variable name is referenced in __all__.,,,,
+203,,Unexpected inferred value,,坏味道,主要,/,,Used to indicate that some value of an unexpected type has been inferred.,,,,
+204,,Unknown encoding specified,10min,坏味道,主要,/,,"Used when an encoding is specified, but it's unknown to Python.",,,,
+205,,"Used when an encoding is specified, but it's unknown to Python.",5min,坏味道,次要,/,,"Used when a single item in parentheses follows an if, for, or other keyword.
+This rule was added in Pylint 1.1.0.
+This rule is deprecated, use 150 instead.",,,DEPRECATED,
+206,,Unnecessary pass statement,1min,坏味道,次要,/,,"Used when a ""pass"" statement that can be avoided is encountered.
+This rule is deprecated, use 6 instead.",,,DEPRECATED,
+207,,Unnecessary semicolon,1min,坏味道,次要,/,,"Used when a statement is ended by a semi-colon ("";""), which isn't necessary(that's python, not C ;).",,,,
+208,,Unreachable code,15min,坏味道,次要,/,,"Used when there is some code behind a ""return"" or ""raise"" statement, which will never be accessed.
+This rule is deprecated, use 96 instead.",,,DEPRECATED,
+209,,Unrecognized file option,,坏味道,主要,/,,"Used when an unknown inline option is encountered.
+Note that options can be specified in the configuration file and can be overridden on the command line.",,,,
+210,,Unsupported format character,3min,坏味道,主要,/,,Used when a unsupported format character is used in a format string.,,,,
+211,,Unsupported logging format character,10min,坏味道,主要,/,,Used when an unsupported format character is used in a logging statement format string.,,,,
+212,,Unused argument,15min,坏味道,次要,/,,Used when a function or method argument is not used.,,,,
+213,,Unused import,1min,坏味道,次要,/,,Used when an imported module or variable is not used.,,,,
+214,,Unused import from wildcard import,,坏味道,次要,/,,Used when an imported module or variable is not used from a 'from X import *'style import.,,,,
+215,,Unused key in format string dictionary,15min,坏味道,次要,/,,Used when a format string that uses named conversion specifiers is used with a dictionary that contains keys not required by the format string.,,,,
+216,,Unused local variables should be removed,5min,坏味道,次要,unused,,"If a local variable is declared but not used, it is dead code and should be removed. Doing so will improve maintainability because developers will not wonder what the variable is used for.","def hello(name):
+    message = ""Hello "" + name # Noncompliant
+    print(name)","def hello(name):
+    message = ""Hello "" + name
+    print(message)",,
+217,,Unused variable,5min,坏味道,次要,/,,Used when a variable is defined but not used.,,,,
+218,,Usage of 'break' or 'continue' outside of a loop,15min,坏味道,主要,/,,"Used when break or continue keywords are used outside a loop.
+This rule is deprecated, use 5 instead.",,,DEPRECATED,
+219,,Use l as long integer identifier,1min,坏味道,次要,/,,"Used when a lower case ""l"" is used to mark a long integer. You should use an upper case ""L"" since the letter ""l"" looks too much like the digit ""1"".",,,,
+220,,"Use of ""property"" on an old style class",20min,坏味道,次要,/,,"Used when Pylint detects the use of the builtin ""property"" on an old style class while this is relying on new style classes features.",,,,
+221,,Use of __slots__ on an old style class,15min,坏味道,主要,/,,Used when an old style class uses the __slots__ attribute.,,,,
+222,,Use of a non-existent operator,3min,坏味道,主要,/,,"Used when you attempt to use the C-style pre-increment or pre-decrement operator -- and ++, which dont exist in Python.
+This rule is deprecated, use  87 instead.",,,DEPRECATED,
+223,,Use of eval,30min,坏味道,次要,/,,"Used when you use the ""eval"" function, to discourage its usage. Consider using `ast.literal_eval` for safely evaluating strings containing Python expressions from untrusted sources.
+This rule was added in Pylint 1.2.0.",,,,
+224,,Use of super on an old style class,15min,坏味道,主要,/,,Used when an old style class uses the super builtin.,,,,
+225,,Use of the <> operator,1min,坏味道,次要,/,,"Used when the deprecated ""<>"" operator is used instead of ""!="".
+This rule is deprecated, use 1 instead.",,,DEPRECATED,
+226,,Use of the `` operator,,坏味道,次要,/,,"Used when the deprecated ""``"" (backtick) operator is used instead of the str() function.
+This rule is deprecated, use 33 instead.",,,DEPRECATED,
+227,,Use of the exec statement,30min,坏味道,次要,/,,"Used when you use the ""exec"" statement, to discourage its usage. That doesn't mean you can not use it!
+This rule is deprecated, use 172 instead.",,,DEPRECATED,
+228,,"Use raise ErrorClass(args) instead of raise ErrorClass, args.",5min,坏味道,次要,/,,"Used when the alternate raise syntax 'raise foo, bar' is used instead of 'raise foo(bar)'. This message can't be emitted when using Python >= 3.0.
+This rule was added in Pylint 1.0.0.",,,,
+229,,Used * or ** magic,15min,坏味道,次要,/,,Used when a function or method is called using `*args` or `**kwargs` to dispatch arguments. This doesn't improve readability and should be used with care.,,,,
+230,,Used black listed builtin function,15min,坏味道,次要,/,,"Used when a black listed builtin function is used (see the bad-function option). Usual black listed functions are the ones like map, or filter, where Python offers now some cleaner alternative like list comprehension.",,,,
+231,,Uses of a deprecated module,1d,坏味道,次要,/,,Used a module marked as deprecated is imported.,,,,
+232,,Using possibly undefined loop variable,15min,坏味道,次要,/,,Used when an loop variable (i.e. defined by a for loop or a list comprehension or a generator expression) is used outside the loop.,,,,
+233,,Using the global statement,1h,坏味道,次要,/,,"Used when you use the ""global"" statement to update a global variable. Pylint just tries to discourage this usage. That doesn't mean you can not use it!",,,,
+234,,Using the global statement at the module level,1min,坏味道,次要,/,,"Used when you use the ""global"" statement at the module level since it has no effect.",,,,
+235,,Using variable before assignment,15min,坏味道,主要,/,,Used when a local variable is accessed before it's assignment.,,,,
+236,,Variables should not be self-assigned,3min,Bug,主要,cert,,"There is no reason to re-assign a variable to itself. Either this statement is redundant and should be removed, or the re-assignment is a mistake and some other value or variable was intended for the assignment instead.",name = name,name = other.name,,"	•	CERT, MSC12-C. - Detect and remove code that has no effect or is never executed
+	•	CERT, MSC12-CPP. - Detect and remove code that has no effect"
+237,,Wildcard import,,坏味道,次要,/,,Used when `from module import *` is detected.,,,,
+238,,Wrong encoding specified,5min,坏味道,主要,/,,Used when a known encoding is specified but the file doesn't seem to be actually in this encoding.,,,,
+239,,"Wrong number of spaces around an operator, bracket, or comma, or before a block opener colon",1min,坏味道,次要,/,,"Used when a wrong number of spaces is used around an operator, bracket, or comma, or before a block opener colon.
+This message belongs to the format checker.
+In Pylint 1.1.0, this message replaced the older whitespace-related messages 138, 137, and 49, and now reports some additional situations.",,,,
+240,,Yield outside function,10min,坏味道,主要,/,,"Used when a ""yield"" statement is found outside a function or method.
+This rule is deprecated, use 8 instead.",,,DEPRECATED,
+,,,,,,,,,,,,
+Bug,15,,,,,,,,,,,
+漏洞,1,,,,,,,,,,,
+坏味道,224,,,,,,,,,,,
