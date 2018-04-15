@@ -74,7 +74,7 @@ x[[1]]
 ![](/attachments/download/193722)
 
 **`x[[1]]`**返回的是：
-[贴图片“列表x[[1]]”]
+![](/attachments/download/193723)
 
 
 
